@@ -23,28 +23,13 @@ app.get("/data", multerUpload.single("image"), (req, res) => {
             widthCount = 0;
         }
 
-        fs.writeFile("size.json", JSON.stringify([
-            img.bitmap.width,
-            img.bitmap.height
-        ]), (err2) => {
+        fs.unlink(`${__dirname}/temp/${req.file.filename}.png`, (err2) => {
             if (err2) throw err2;
-            
-            console.log("Wrote size of image");
-            fs.unlink(`${__dirname}/temp/${req.file.filename}.png`, (err3) => {
-                if (err3) throw err3;
-    
-                console.log("Serialize done");
-                res.json(jsonDATA);
-            });
+
+            console.log("Serialize done");
+            res.json({ size: { x: img.bitmap.width, y: img.bitmap.height }, data: jsonDATA });
         });
     });
-});
-
-app.get("/size", (req, res) => {
-	fs.readFile("size.json", (err, data) => {
-		if (err) return res.status(500).end();
-		res.json(JSON.parse(data.toString()));
-	});
 });
 
 app.listen(3000, () => {
