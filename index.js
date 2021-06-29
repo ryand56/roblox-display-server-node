@@ -1,20 +1,20 @@
 const fs = require("fs");
+const multerUpload = require("multer")({ dest: "temp/" });
 const jimp = require("jimp");
 const express = require("express");
 const app = express();
 
-app.get("/data", (req, res) => {
-    jimp.read(`${__dirname}/temp/file.png`, (err2, img) => {
-        if (err2) throw err2;
+app.get("/data", multerUpload.single("image"), (req, res) => {
+    jimp.read(`${__dirname}/temp/${req.file.filename}.png`, (err, img) => {
+        if (err) throw err;
     
         let jsonDATA = {};
         let widthCount = 0;
         let heightCount = 0;
     
-        // Will be replaced soon
-        while (heightCount <= 0)
+        while (heightCount <= img.bitmap.height)
         {
-            while (widthCount <= 0)
+            while (widthCount <= img.bitmap.width)
             {
                 jsonDATA[`${widthCount.toString()},${heightCount.toString()}`] = jimp.intToRGBA(img.getPixelColor(widthCount, heightCount));
                 widthCount++;
@@ -22,9 +22,21 @@ app.get("/data", (req, res) => {
             heightCount++;
             widthCount = 0;
         }
-        
-        console.log("Serialize done");
-        res.json(jsonDATA);
+
+        fs.writeFile("size.json", JSON.stringify([
+            img.bitmap.width,
+            img.bitmap.height
+        ]), (err2) => {
+            if (err2) throw err2;
+            
+            console.log("Wrote size of image");
+            fs.unlink(`${__dirname}/temp/${req.file.filename}.png`, (err3) => {
+                if (err3) throw err3;
+    
+                console.log("Serialize done");
+                res.json(jsonDATA);
+            });
+        });
     });
 });
 
