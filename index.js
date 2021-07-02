@@ -5,7 +5,7 @@ app.use(express.text());
 
 const jimp = require("jimp");
 
-app.get("/data", (req, res) => {
+app.post("/data", (req, res) => {
     if (!req.body) return res.status(400).end();
     jimp.read(Buffer.from(req.body, "base64"), (err, img) => {
         if (err) return res.status(415).end();
