@@ -1,12 +1,14 @@
-const fs = require("fs");
-const multerUpload = require("multer")({ dest: "temp/" });
-const jimp = require("jimp");
 const express = require("express");
 const app = express();
 
-app.get("/data", multerUpload.single("image"), (req, res) => {
-    jimp.read(`${__dirname}/temp/${req.file.filename}.png`, (err, img) => {
-        if (err) throw err;
+app.use(express.text());
+
+const jimp = require("jimp");
+
+app.get("/data", (req, res) => {
+    if (!req.body) return res.status(400).end();
+    jimp.read(Buffer.from(req.body, "base64"), (err, img) => {
+        if (err) return res.status(415).end();
     
         let jsonDATA = {};
         let widthCount = 0;
@@ -23,12 +25,8 @@ app.get("/data", multerUpload.single("image"), (req, res) => {
             widthCount = 0;
         }
 
-        fs.unlink(`${__dirname}/temp/${req.file.filename}.png`, (err2) => {
-            if (err2) throw err2;
-
-            console.log("Serialize done");
-            res.json({ size: { x: img.bitmap.width, y: img.bitmap.height }, data: jsonDATA });
-        });
+        console.log("Serialize done");
+        res.json({ size: { x: img.bitmap.width, y: img.bitmap.height }, data: jsonDATA });
     });
 });
 
