@@ -1,35 +1,30 @@
-const express = require("express");
+const express = require('express');
 const app = express();
+const jimp = require('jimp');
 
-app.use(express.text());
+app.use(express.static('public'));
 
-const jimp = require("jimp");
-
-app.post("/data", (req, res) => {
-    if (!req.body) return res.status(400).end();
-    jimp.read(Buffer.from(req.body, "base64"), (err, img) => {
-        if (err) return res.status(415).end();
-    
-        let jsonDATA = {};
-        let widthCount = 0;
-        let heightCount = 0;
-    
-        while (heightCount <= img.bitmap.height)
-        {
-            while (widthCount <= img.bitmap.width)
-            {
-                jsonDATA[`${widthCount.toString()},${heightCount.toString()}`] = jimp.intToRGBA(img.getPixelColor(widthCount, heightCount));
-                widthCount++;
+app.post('/upload', (req, res) => {
+    if (!req.body) return res.sendStatus(400);
+    jimp.read(Buffer.from(req.body, 'base64'), (err, image) => {
+        if (err) return res.sendStatus(415);
+        let jsondata = {};
+        for (let heightcount = 0; heightcount <= image.bitmap.height; heightcount++) {
+            for (let widthcount = 0; widthcount <= image.bitmap.width; widthcount++) {
+                let color = jump.intToRGBA(image.getPixelColor(widthcount, heightcount));
+                jsondata[widthcount + ',' + heightcount] = color;
             }
-            heightCount++;
-            widthCount = 0;
         }
-
-        console.log("Serialize done");
-        res.json({ size: { x: img.bitmap.width, y: img.bitmap.height }, data: jsonDATA });
+        res.send({
+            size: {
+                x: image.bitmap.width,
+                y: image.bitmap.height
+            },
+            data: jsondata
+        });
     });
 });
 
 app.listen(3000, () => {
-	console.log("Running");
+    console.log('Listening on port 3000');
 });
